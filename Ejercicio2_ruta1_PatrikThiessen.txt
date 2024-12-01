@@ -1,0 +1,141 @@
+Ruta 1_ejercicio2
+
+Datasource.kt
+package com.example.dessertclicker.data
+import com.example.dessertclicker.R
+import com.example.dessertclicker.model.Dessert
+
+object Datasource {
+    val dessertList = listOf(
+        Dessert(R.drawable.cupcake, 5, 0),
+        Dessert(R.drawable.donut, 10, 5),
+        Dessert(R.drawable.eclair, 15, 20),
+        Dessert(R.drawable.froyo, 30, 50),
+        Dessert(R.drawable.gingerbread, 50, 100),
+        Dessert(R.drawable.honeycomb, 100, 200),
+        Dessert(R.drawable.icecreamsandwich, 500, 500),
+        Dessert(R.drawable.jellybean, 1000, 1000),
+        Dessert(R.drawable.kitkat, 2000, 2000),
+        Dessert(R.drawable.lollipop, 3000, 4000),
+        Dessert(R.drawable.marshmallow, 4000, 8000),
+        Dessert(R.drawable.nougat, 5000, 16000),
+        Dessert(R.drawable.oreo, 6000, 20000)
+    )
+}
+
+DessertUIState.kt
+package com.example.dessertclicker.data
+import androidx.annotation.DrawableRes
+
+data class DessertUiState(
+    val dessertsSold: Int = 0,
+    val revenue: Int = 0,
+    val currentDessertIndex: Int = 0,
+    @DrawableRes val currentDessertImageId: Int = Datasource.dessertList[0].imageId,
+    val currentDessertPrice: Int = Datasource.dessertList[0].price
+)
+Dessert.kt
+package com.example.dessertclicker.model
+
+data class Dessert(
+    val imageId: Int,
+    val price: Int,
+    val startProductionAmount: Int
+)
+
+Theme.kt
+package com.example.dessertclicker.ui.theme
+
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+private val DarkColorPalette = darkColors(
+    primary = Color(0xFFBB86FC),
+    primaryVariant = Color(0xFF00574B),
+    secondary = Color(0xFFD81B60)
+)
+
+private val LightColorPalette = lightColors(
+    primary = Color(0xFF008577),
+    primaryVariant = Color(0xFF00574B),
+    secondary = Color(0xFFD81B60)
+)
+
+private val Typography = Typography(
+    body1 = TextStyle(fontSize = 16.sp),
+    h4 = TextStyle(color = Color(0xFF008577), fontSize = 33.sp),
+    h6 = TextStyle(color = Color(0x99000000), fontSize = 20.sp)
+)
+
+private val Shapes = Shapes(
+    small = RoundedCornerShape(4.dp),
+    medium = RoundedCornerShape(4.dp),
+    large = RoundedCornerShape(0.dp)
+)
+
+@Composable
+fun DessertClickerTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+    MaterialTheme(
+        colors = if (darkTheme) DarkColorPalette else LightColorPalette,
+        typography = Typography,
+        shapes = Shapes,
+        content = content
+    )
+}
+
+DessertViewModel.kt
+package com.example.dessertclicker.ui
+
+import androidx.lifecycle.ViewModel
+import com.example.dessertclicker.data.DessertUiState
+import com.example.dessertclicker.data.Datasource.dessertList
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+class DessertViewModel : ViewModel() {
+
+    private val _uiState = MutableStateFlow(DessertUiState())
+    val uiState: StateFlow<DessertUiState> = _uiState
+
+    fun onDessertClicked() {
+        _uiState.value = _uiState.value.let { state ->
+            val newDessertsSold = state.dessertsSold + 1
+            val newDessertIndex = dessertList.indexOfLast { newDessertsSold >= it.startProductionAmount }
+            state.copy(
+                dessertsSold = newDessertsSold,
+                revenue = state.revenue + state.currentDessertPrice,
+                currentDessertIndex = newDessertIndex,
+                currentDessertImageId = dessertList[newDessertIndex].imageId,
+                currentDessertPrice = dessertList[newDessertIndex].price
+            )
+        }
+    }
+}
+
+
+MainActivity.kt
+package com.example.dessertclicker
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import com.example.dessertclicker.ui.theme.DessertClickerTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            DessertClickerTheme {
+                DessertClickerApp()
+            }
+        }
+    }
+}
+
+
+
